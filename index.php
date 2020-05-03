@@ -20,6 +20,51 @@
 
 
 	<body>
+
+		<div class="slideshow">
+
+			<div class="slideshow-container">
+
+				<div class="mySlides fade">
+				  <div class="numbertext">1 / 4</div>
+				  <img src="img/slide-pic-01.JPG" style="width:100%">
+				  <div class="text">Caption Text</div>
+				</div>
+
+				<div class="mySlides fade">
+				  <div class="numbertext">2 / 4</div>
+				  <img src="img/slide-pic-02.JPG" style="width:100%">
+				  <div class="text">Caption Two</div>
+				</div>
+
+				<div class="mySlides fade">
+				  <div class="numbertext">3 / 4</div>
+				  <img src="img/slide-pic-03.JPG" style="width:100%">
+				  <div class="text">Caption Three</div>
+				</div>
+
+				<div class="mySlides fade">
+				  <div class="numbertext">4 / 4</div>
+				  <img src="img/slide-pic-04.JPG" style="width:100%">
+				  <div class="text">Caption Three</div>
+				</div>
+
+			</div>
+			
+			<br>
+
+			<div style="text-align:center">
+			  <span class="dot"></span> 
+			  <span class="dot"></span> 
+			  <span class="dot"></span>
+			  <span class="dot"></span> 
+			</div>
+
+			<script src="js/slideShow.js"></script>
+
+		</div>
+
+
 		
 			<nav id="navigation" class="navigation">
 
