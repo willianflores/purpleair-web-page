@@ -1,4 +1,4 @@
-# Rede  Monitoramento da Qualidade do Ar no Acre - Disponiblizçao de Dados
+# Rede  Monitoramento da Qualidade do Ar no Acre
 
 # Oque é a rede?
 
