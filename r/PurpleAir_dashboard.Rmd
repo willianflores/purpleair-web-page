@@ -1,0 +1,217 @@
+---
+title: "Qualidade do Ar no Acre"
+author: ""
+output: 
+  flexdashboard::flex_dashboard:
+    favicon: img/labgama-favicon.png
+    social: [ "twitter", "facebook" ]
+    navbar:
+      - { title: "Home", icon: "", href: "index.php", align: right }
+    
+---
+
+
+
+```{r setup, include=FALSE}
+# List of packages for session
+  .packages = c('dygraphs','xts','forecast','ggplot2','tidyverse','lubridate','openair'
+                ,'tsibble','lattice','RCurl','jsonlite','sp','rgdal','sf','rgeos','maptools'
+                ,'ggsn','viridis','tmap','tmaptools','leaflet','plyr','reshape2','Hmisc'
+                ,'scales','dplyr', 'spData','mapview', 'shiny','reshape2','rlang','tmaptools'
+                ,'flexdashboard','plotly')
+  
+# Install CRAN packages (if not already installed)
+  .inst <- .packages %in% installed.packages()
+  if(length(.packages[!.inst]) > 0) install.packages(.packages[!.inst])
+
+# Load packages into session 
+  lapply(.packages, require, character.only=TRUE)
+
+
+```
+
+
+```{r save}
+
+request_db = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\request_db.csv",header=T)
+
+request_db$date   <- as.POSIXct(request_db$date,tz=Sys.timezone())
+
+t.mean <- request_db %>%
+      group_by(date) %>%
+      summarise_at(vars(-name), funs(median(., na.rm=TRUE)))
+  
+    mun.up.oms <- t.mean %>%
+      filter(PM2.5_C > 25) %>%
+      select(date, PM2.5_C)
+   
+
+# Interactive day tmap 
+
+request_db_b = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\request_db_b.csv",header=T)
+
+request_db_b$date   <- as.POSIXct(request_db_b$date,tz=Sys.timezone())
+
+
+day_and_hour = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\day_and_hour.csv",header=T)
+day_and_hour_mtx <- acast(day_and_hour, hora~mes, value.var="Total")
+
+request_db_m = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\request_db_m.csv",header=T)
+request_db_m$date   <- as.POSIXct(request_db_m$date,tz=Sys.timezone())
+
+t.mean_m = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\t.mean_m.csv",header=T)
+t.mean_m$date   <- as.POSIXct(t.mean_m$date,tz=Sys.timezone())
+
+day_and_hour = read.csv("C:\\Google Drive\\UFAC\\Projetos\\PurpleAirNetwork\\csv\\PurpleAir_sensor_list\\day_and_hour.csv",header=T)
+
+```
+
+Serie Histórica {data-orientation=rows}
+=======================================================================
+
+Descrição {.sidebar}
+-----------------------------------------------------------------------
+
+Os dados usados para elaborar os gráficos foram coletados com Sensores <a href="https://www2.purpleair.com/products/purpleair-pa-ii-sd" class = "link" target="_blank">PurpleAir PA-II-SD</a> que fazem parte da rede de monitoramento da qualidade do Estado do Acre, Brasil. Considerando que <a href="https://doi.org/10.1016/j.atmosenv.2019.116946" class = "link" target="_blank">estudos científicos</a> têm demonstrado que esse tipo de sensor tende a sobrestimar as concentrações em fator médio de 50%, para tanto realizamos a correção dos dados aplicando a equação PM<sub>2,5</sub> (µg/m³) = 0,5 x PA (PM<sub>2,5</sub> CF=1) – 0,66, desenvolvida pela <a href="http://www.lrapa.org/" class = "link" target="_blank">Lane Regional Air Protection Agency</a> (LRAPA) em <a href="https://www.lrapa.org/DocumentCenter/View/4147/PurpleAir-Correction-Summary" class = "link" target="_blank">estudo</a> de 2017.
+
+Durante a estação de 2019, o estado do Acre teve, em média, 21 dias com qualidade do ar acima do limite diário recomendado pela <a href="https://apps.who.int/iris/bitstream/handle/10665/69477/WHO_SDE_PHE_OEH_06.02_eng.pdf?sequence=1" class = "link" target="_blank">Organização Mundial da Saúde</a> (OMS) para concentração de material particulado PM2.5 (Figura 1), que é 25 &mu;g/m<sup>3</sup>. As três sedes municipais com maior número de dias com PM2,5 acima da recomendação da OMS foram: Assis Brasil (32 dias), Sena Madureira (32 dias), Brasiléia (30 dias).
+
+Para mais informações acesse o <B><i>Relatório Executivo: Monitoramento da Qualidade do ar em 2019 no Estado do Acre”</i></B> disponível nesse <a href="http://dx.doi.org/10.13140/RG.2.2.17584.10244/2" class = "link" target="_blank">link</a>.
+
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Variação temporal da concentração de material particulado (MP<sub>2,5</sub>) nos muncípios do Acre
+
+```{r}
+mun <- ggplot(request_db, aes(date, PM2.5_C)) +
+            geom_line(color='#34495E') +
+            facet_wrap(~ name) +
+      labs(x = "Datas", 
+           y = 'Média diária de MP2,5 (&mu;g/m<sup>3</sup>)',
+           title = "") + geom_hline(yintercept=25, linetype="dashed", 
+                                    color = 'gray50', size=.3) +
+          theme(axis.title = element_text(size = 11)) +
+          theme_bw()
+            
+    plotly::ggplotly(mun)
+```
+
+
+### Variação temporal da concentração de material particulado (MP<sub>2,5</sub>) no Acre
+
+```{r}
+acre <- ggplot(data = request_db, aes(x = date, y = PM2.5_C)) +
+      geom_line(aes(group = name), alpha = .3,color='#C0C0C0') +
+      geom_line(data = t.mean, aes(date, PM2.5_C),
+                alpha = 0.7, color = "red", size = .5) +
+      # geom_line(data = t.median, aes(date, PM2.5_C),
+      #          alpha = 0.7, color = "blue", size = .8) +
+      geom_point(data = mun.up.oms, aes(date, PM2.5_C),
+                alpha = 0.7, color = "black", size = 2) + 
+      labs(x = "Datas", 
+           y = 'Média diária de MP<sub>2,5</sub> (&mu;g/m<sup>3</sup>)',
+           title = "") +
+      theme_bw()
+    
+    acre <- acre + scale_x_datetime(breaks = date_breaks("1 months"),labels = date_format( "%Y (%b)")) +
+      scale_y_continuous(limits=c(0,120)) +
+      theme(axis.text.x=element_text(size=10,angle = 45)) + theme(axis.text.y=element_text(size=10)) +
+      theme(axis.title = element_text(size = 11)) + theme( panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+      geom_hline(yintercept=25, linetype="dashed", 
+                 color = 'gray50', size=.3) +
+      scale_color_manual(name = "Relationship", values = 'black') + 
+      scale_linetype_manual(name = "Fit Type", values = 'gray50') +
+      annotate(geom = "point", x = as.POSIXct('2019-09-01'), y = 120, colour = "black", size = 2) +
+      annotate(geom = "text", x = as.POSIXct('2019-10-17'), y = 120
+               , label = "Dias com médias acima do padrão da OMS", hjust = 0, nudge_x = 0.05,  size=3) +
+      annotate("segment", x = as.POSIXct('2019-08-26'), xend = as.POSIXct('2019-09-05') 
+               , y = 115, yend = 115, linetype="dashed", colour = "#C0C0C0", size=.5, alpha=0.7) +
+      annotate(geom = "text", x = as.POSIXct('2019-10-24'), y = 115
+               , label = "Limite máximo recomendado pela OMS (25 &mu;g/m<sup>3</sup>)"
+               , hjust = 0, nudge_x = 0.05, size=3) +
+      annotate("segment", x = as.POSIXct('2019-08-26'), xend = as.POSIXct('2019-09-05') 
+               , y = 110, yend = 110, colour = "#C0C0C0", size=.5, alpha=0.7) +
+      annotate(geom = "text", x = as.POSIXct('2019-10-03'), y = 110
+               , label = "Média diária por município"
+               , hjust = 0, nudge_x = 0.05, size=3) +
+      annotate("segment", x = as.POSIXct('2019-08-26'), xend = as.POSIXct('2019-09-05') 
+               , y = 105, yend = 105, colour = "red", size=.5, alpha=0.7) +
+      annotate(geom = "text", x = as.POSIXct('2019-10-10'), y = 105
+               , label = "Média diária para o Estado do Acre"
+               , hjust = 0, nudge_x = 0.05, size=3)
+    
+    ggplotly(acre)
+```
+
+
+Dados Mensais, Semanais e Diários [](#dados-diversos)
+=======================================================================
+
+Descrição {.sidebar}
+-----------------------------------------------------------------------
+
+O mês de abril de 2020 já apresenta sinais de aumento da concentração de material particulado (MP<sub>2,5</sub> &mu;g/m<sup>3</sup>) no ar em algumas cidades como Cruzeiro do sul, Brasiléia e Epitaciolândia. Provavelmente devido a queimadas urbanas em dias de sol e sem chuva.
+
+De forma geral na última semana a classe de qualidade do ar foi boa, com valores abaixo de 20 &mu;g/m<sup>3</sup> (MP<sub>2,5</sub>). No período, não houve dados dos sensores nos municípios de Feijó, Tarauacá, Porto Walter, Rodrigues Alves e Mâncio Lima, bem como parcialmente para Marechal Thaumaturgo e Jordão por falta de conexão com a internet.
+
+Considerando os dados históricos foi possível verificar que os meses mais críticos para qualidade do ar no Acre são agosto e setembro e durante o dia o período noturno entre o início da noite e início da manhã (18:00hs – 07:00hs).
+
+
+
+Column 
+-----------------------------------------------------------------------
+
+### Qualidade do ar em abril de 2020 no Acre: média diária estadul e municipal
+```{r}
+# Plot month status
+    
+    acre_m <- ggplot(data = request_db_m, aes(x = date, y = PM2.5_C)) +
+      geom_line(aes(group = name), alpha = .3,color='#C0C0C0') +
+      geom_line(data = t.mean_m, aes(date, PM2.5_C),
+                alpha = 0.7, color = "red", size = .5) +
+      # geom_line(data = t.median, aes(date, PM2.5_C),
+      #          alpha = 0.7, color = "blue", size = .8) +
+      #geom_point(data = mun.up.oms_m, aes(date, PM2.5_C),
+      #           alpha = 0.7, color = "black", size = 2) + 
+      labs(x = "Datas", 
+           y = 'Média diária de MP2,5 (&mu;g/m<sup>3</sup>)',
+           title = "") +
+      theme_bw()
+    
+    acre_m <- acre_m + scale_x_datetime(breaks = date_breaks("2 days"),labels = date_format( "%b %d")) +
+      scale_y_continuous(limits=c(0,20)) +
+      theme(axis.text.x=element_text(size=10,angle = 0)) + theme(axis.text.y=element_text(size=10)) +
+      theme(axis.title = element_text(size = 11)) + theme( panel.grid.major = element_blank(),
+                                                           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+      scale_color_manual(name = "Relationship", values = 'black') + 
+      scale_linetype_manual(name = "Fit Type", values = 'gray50') +
+      annotate("segment", x = as.POSIXct('2020-04-02'), xend = as.POSIXct('2020-04-03') 
+               , y = 17, yend = 17, colour = "#C0C0C0", size=.5, alpha=0.7) +
+      annotate(geom = "text", x = as.POSIXct('2020-04-07'), y = 17
+               , label = "Média diária por município"
+               , hjust = 0, nudge_x = 0.05, size=3) +
+      annotate("segment", x = as.POSIXct('2020-04-02'), xend = as.POSIXct('2020-04-03') 
+               , y = 15.5, yend = 15.5, colour = "red", size=.5, alpha=0.7) +
+      annotate(geom = "text", x = as.POSIXct('2020-04-08'), y = 15.5
+               , label = "Média diária para o Estado do Acre"
+               , hjust = 0, nudge_x = 0.05, size=3)
+    
+    plotly::ggplotly(acre_m)
+```
+
+
+
+### Classes de qualidade do ar por município no Acre: período 16 abr 2020 - 22 abr 2020
+
+![](img/purpleair_gif_20200416-22.gif)
+
+Column 
+-----------------------------------------------------------------------
+
+### Meses e horas do dia críticos para qualidade do ar no Acre
+
+![](img/PurpleAir_heatmap.png)
+
