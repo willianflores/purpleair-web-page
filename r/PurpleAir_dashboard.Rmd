@@ -87,15 +87,20 @@ Row {.tabset .tabset-fade}
 ```{r}
 mun <- ggplot(request_db, aes(date, PM2.5_C)) +
             geom_line(color='#34495E') +
-            facet_wrap(~ name) +
+            facet_wrap(~ name, ncol = 5) +
       labs(x = "Datas", 
            y = 'Média diária de MP2,5 (&mu;g/m<sup>3</sup>)',
            title = "") + geom_hline(yintercept=25, linetype="dashed", 
                                     color = 'gray50', size=.3) +
-          theme(axis.title = element_text(size = 11)) +
           theme_bw()
+
+mun <- mun + scale_x_datetime(breaks = date_breaks("2 months"),labels = date_format( "%Y (%b)"))        + scale_y_continuous(limits=c(0,120)) +
+      theme(axis.text.x=element_text(size=9,angle = 45)) +
+      theme(axis.text.y=element_text(size=9)) +
+      theme(axis.title = element_text(size = 10))
+  
             
-    plotly::ggplotly(mun)
+    plotly::ggplotly(mun, dynamicTicks = F)
 ```
 
 
@@ -117,8 +122,8 @@ acre <- ggplot(data = request_db, aes(x = date, y = PM2.5_C)) +
     
     acre <- acre + scale_x_datetime(breaks = date_breaks("1 months"),labels = date_format( "%Y (%b)")) +
       scale_y_continuous(limits=c(0,120)) +
-      theme(axis.text.x=element_text(size=10,angle = 45)) + theme(axis.text.y=element_text(size=10)) +
-      theme(axis.title = element_text(size = 11)) + theme( panel.grid.major = element_blank(),
+      theme(axis.text.x=element_text(size=9,angle = 45)) + theme(axis.text.y=element_text(size=9)) +
+      theme(axis.title = element_text(size = 10)) + theme( panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
       geom_hline(yintercept=25, linetype="dashed", 
                  color = 'gray50', size=.3) +
@@ -181,21 +186,21 @@ Column
            title = "") +
       theme_bw()
     
-    acre_m <- acre_m + scale_x_datetime(breaks = date_breaks("2 days"),labels = date_format( "%b %d")) +
+    acre_m <- acre_m + scale_x_datetime(breaks = date_breaks("1 days"),labels = date_format( "%b %d")) +
       scale_y_continuous(limits=c(0,20)) +
-      theme(axis.text.x=element_text(size=10,angle = 0)) + theme(axis.text.y=element_text(size=10)) +
-      theme(axis.title = element_text(size = 11)) + theme( panel.grid.major = element_blank(),
+      theme(axis.text.x=element_text(size=9,angle = 45)) + theme(axis.text.y=element_text(size=9)) +
+      theme(axis.title = element_text(size = 10)) + theme( panel.grid.major = element_blank(),
                                                            panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
       scale_color_manual(name = "Relationship", values = 'black') + 
       scale_linetype_manual(name = "Fit Type", values = 'gray50') +
       annotate("segment", x = as.POSIXct('2020-04-02'), xend = as.POSIXct('2020-04-03') 
                , y = 17, yend = 17, colour = "#C0C0C0", size=.5, alpha=0.7) +
-      annotate(geom = "text", x = as.POSIXct('2020-04-07'), y = 17
+      annotate(geom = "text", x = as.POSIXct('2020-04-07 15:00'), y = 17
                , label = "Média diária por município"
                , hjust = 0, nudge_x = 0.05, size=3) +
       annotate("segment", x = as.POSIXct('2020-04-02'), xend = as.POSIXct('2020-04-03') 
                , y = 15.5, yend = 15.5, colour = "red", size=.5, alpha=0.7) +
-      annotate(geom = "text", x = as.POSIXct('2020-04-08'), y = 15.5
+      annotate(geom = "text", x = as.POSIXct('2020-04-09'), y = 15.5
                , label = "Média diária para o Estado do Acre"
                , hjust = 0, nudge_x = 0.05, size=3)
     
@@ -204,9 +209,9 @@ Column
 
 
 
-### Classes de qualidade do ar por município no Acre: período 16 abr 2020 - 22 abr 2020
+### Classes de qualidade do ar por município no Acre: período 27 abril 2020 - 03 maio 2020
 
-![](img/purpleair_gif_20200416-22.gif)
+![](img/purpleair_gif_20200427-0503.gif)
 
 Column 
 -----------------------------------------------------------------------
